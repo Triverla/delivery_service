@@ -6,7 +6,12 @@ class Order {
   tableName = "orders";
 
   find = async (params = {}) => {
-    let sql = `SELECT order_id, distance, status FROM ${this.tableName}`;
+
+    const limit = params.limit || 10;
+    const offset = params.offset || 0;
+    const page = params.page || 1;
+
+    let sql = `SELECT order_id, distance, status FROM ${this.tableName} limit ${limit} offset ${offset}`;
 
     if (!Object.keys(params).limit) {
       return await query(sql);
@@ -30,6 +35,8 @@ class Order {
     return result[0];
   };
 
+  //TO DO: fetch origin and destination values from google map api
+
   create = async ({ destination, origin }) => {
     let cusId = Math.floor(Math.random() * 1000);
     let OrderId = Math.floor(Math.random() * (999999 - 100000) + 100000);
@@ -37,14 +44,11 @@ class Order {
     const sql = `INSERT INTO ${this.tableName}
         (order_id, customer_id, destination, origin, distance, status) VALUES (${OrderId},${cusId},?,?,${distance}, 'unassigned')`;
 
-    const result = await query(sql, [
-      destination,
-      origin
-    ]);
+    const result = await query(sql, [destination, origin]);
     const affectedRows = result ? result.affectedRows : 0;
 
-    if(affectedRows < 1) {
-        throw new Error("Order not placed");
+    if (affectedRows < 1) {
+      throw new Error("Order not placed");
     }
 
     const sql2 = `SELECT * FROM ${this.tableName}
@@ -53,7 +57,6 @@ class Order {
     const result2 = await query(sql2, [cusId]);
 
     return result2[0];
-
   };
 
   update = async (params, id) => {

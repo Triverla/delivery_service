@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS orders
   ( 
      id         INT PRIMARY KEY auto_increment, 
      customer_id   VARCHAR(25) NULL, 
-     order_id   INT(12) NOT NULL, 
+     order_id   INT(12) UNIQUE NOT NULL, 
      origin JSON NOT NULL, 
      destination  JSON NOT NULL, 
      distance      VARCHAR(20) NULL, 

@@ -14,11 +14,12 @@ class OrderController {
         const page = Number(req.query.page) || 1;
         const limit = Number(req.query.limit) || 10;
         const filter = req.query.filter || {};
+        const offset = (page - 1) * limit
         const orderBy = {
           ...((req.query.orderBy && req.query.orderBy.field && { field: req.query.orderBy.field }) || { field: 'created_at' }),
           ...((req.query.orderBy && req.query.orderBy.direction && { direction: req.query.orderBy.direction }) || { direction: 'asc' })
         }
-    let orderList = await Order.find({page, limit, filter, orderBy});
+    let orderList = await Order.find({limit, page, filter, orderBy, offset});
     if (!orderList.length) {
       throw new apiResponse.ErrorResponse(res, "Orders not found");
     }
@@ -28,8 +29,8 @@ class OrderController {
     }
 
     orderList = orderList.map((order) => {
-      const { customer_id, ...ordersWithoutDistance } = order;
-      return ordersWithoutDistance;
+      const { customer_id, ...ordersWithoutCustomerID } = order;
+      return ordersWithoutCustomerID;
     });
 
     res.send(orderList);
@@ -77,13 +78,10 @@ class OrderController {
 
   takeOrder = async (req, res, next) => {
     try {
+
       this.checkValidation(req, res);
 
-      const { status, ...restOfUpdates } = req.body;
-
-      // do the update query and get the result
-      // it can be partial edit
-      const result = await UserModel.update(restOfUpdates, req.params.id);
+      const result = await Order.update(req.body, req.params.id);
 
       if (!result) {
         throw new Error("Something went wrong");
@@ -97,8 +95,9 @@ class OrderController {
         ? "Order updated successfully"
         : "Update failed";
 
-      return apiResponse.successResponse(res, message, result);
-
+      return res.status(200).json({
+          status: "SUCCESS"
+      });
     } catch (error) {
         logger.error(error); // log error to console
         return res.status(400).json({

@@ -9,7 +9,9 @@ const {
 router.post("/orders", createOrderSchema, function (req, res) {
   OrderController.placeOrder(req, res);
 });
-
+router.patch("/orders/:id", function (req, res) {
+  OrderController.takeOrder(req, res);
+});
 
 router.get("/orders", function (req, res) {
     OrderController.getAllOrders(req, res);
