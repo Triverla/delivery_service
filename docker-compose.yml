@@ -1,0 +1,34 @@
+version: '3'
+
+services:
+  server:
+    build: .
+    container_name: delivery_service
+    depends_on:
+      - mysql
+    ports:
+      - 3000:3000
+    links:
+      - mysql
+    env_file:
+      - .env.docker
+    command: npm run start-docker
+  mysql:
+    image: mysql
+    restart: always
+    env_file:
+      - .env.docker
+    environment:
+      MYSQL_ROOT_PASSWORD: $DB_PASSWORD
+      MYSQL_DATABASE: $DB_DATABASE
+    cap_add:
+      - SYS_NICE
+    ports:
+      - 11543:3306
+    volumes:
+      - db-config:/etc/mysql
+      - db-data:/var/lib/mysql
+
+volumes:
+  db-config:
+  db-data:
