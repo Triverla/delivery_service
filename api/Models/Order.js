@@ -6,7 +6,6 @@ class Order {
   tableName = "orders";
 
   find = async (params = {}) => {
-
     const limit = params.limit || 10;
     const offset = params.offset || 0;
     const page = params.page || 1;
@@ -39,8 +38,18 @@ class Order {
 
   create = async ({ destination, origin }) => {
     let cusId = Math.floor(Math.random() * 1000);
-    let OrderId = Math.floor(Math.random() * (999999 - 100000) + 100000);
+    let OrderId = 10;
     let distance = Math.floor(Math.random() * (9999 - 1000) + 1000);
+
+    const sql2 = `SELECT * FROM ${this.tableName}
+        WHERE order_id = ${OrderId}`;
+
+    const result2 = await query(sql2, [cusId]);
+
+    if (result2.length > 0) {
+      throw new Error("Order already exists");
+    }
+
     const sql = `INSERT INTO ${this.tableName}
         (order_id, customer_id, destination, origin, distance, status) VALUES (${OrderId},${cusId},?,?,${distance}, 'unassigned')`;
 
@@ -51,16 +60,24 @@ class Order {
       throw new Error("Order not placed");
     }
 
-    const sql2 = `SELECT * FROM ${this.tableName}
+    const sql3 = `SELECT * FROM ${this.tableName}
         WHERE order_id = ${OrderId}`;
 
-    const result2 = await query(sql2, [cusId]);
+    const result3 = await query(sql3, [cusId]);
 
-    return result2[0];
+    return result3[0];
   };
 
   update = async (params, id) => {
     const { columnSet, values } = multipleColumnSet(params);
+    const sql2 = `SELECT status FROM ${this.tableName}
+    WHERE id = ${id}`;
+
+    const result2 = await query(sql2, [id]);
+
+    if (result2[0].status == params.status.toLowerCase()) {
+      throw new Error("Order already exists");
+    }
 
     const sql = `UPDATE orders SET ${columnSet} WHERE id = ?`;
 
